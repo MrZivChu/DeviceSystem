@@ -7,6 +7,8 @@ import android.widget.Toast;
 
 import com.hikvision.netsdk.HCNetSDK;
 import com.hikvision.netsdk.NET_DVR_PREVIEWINFO;
+import com.hikvision.netsdk.NET_DVR_VOD_PARA;
+import com.hikvision.netsdk.PlaybackControlCommand;
 import com.sun.jna.Pointer;
 
 public class CameraHelper {
@@ -35,17 +37,40 @@ public class CameraHelper {
         return RealPlay_V40_jni(0, playInfo, null);
     }
 
-    public static boolean OnStopRealPlay(int previewHandle){
+    public static boolean OnStopRealPlay(int previewHandle) {
         if (previewHandle < 0) {
             Log.e("DeviceSystem", "RealPlay_Stop_jni failed with error param");
             return false;
         }
-        if(!HCNetSDK.getInstance().NET_DVR_StopRealPlay(previewHandle))
-        {
+        if (!HCNetSDK.getInstance().NET_DVR_StopRealPlay(previewHandle)) {
             Log.e("DeviceSystem", "RealPlay_Stop_jni failed");
             return false;
         }
         return true;
+    }
+
+    public static int OnPlayBackByTime_v40(int iLogID, NET_DVR_VOD_PARA vodParma) {
+        if (iLogID < 0 || vodParma == null) {
+            Log.e("SimpleDemo", "PlayBackByTime_v40_jni failed with error param");
+            return -1;
+        }
+        int iPlaybackID = HCNetSDK.getInstance().NET_DVR_PlayBackByTime_V40(iLogID, vodParma);
+        if (iPlaybackID < 0) {
+            Log.e("SimpleDemo", "NET_DVR_PlayBackByTime_V40 is failed!Err:" + HCNetSDK.getInstance().NET_DVR_GetLastError());
+            return -2;
+        }
+        if (!HCNetSDK.getInstance().NET_DVR_PlayBackControl_V40(iPlaybackID, PlaybackControlCommand.NET_DVR_PLAYSTART, null, 0, null)) {
+            Log.e("SimpleDemo", "NET_DVR_PlayBackControl_V40 is failed!Err:" + HCNetSDK.getInstance().NET_DVR_GetLastError());
+            HCNetSDK.getInstance().NET_DVR_StopPlayBack(iPlaybackID);
+            return -3;
+        }
+
+        if (!HCNetSDK.getInstance().NET_DVR_PlayBackControl_V40(iPlaybackID, PlaybackControlCommand.NET_DVR_PLAYSTARTAUDIO, null, 0, null)) {
+            Log.e("SimpleDemo", "NET_DVR_PlayBackControl_V40 is failed!Err:" + HCNetSDK.getInstance().NET_DVR_GetLastError());
+            HCNetSDK.getInstance().NET_DVR_StopPlayBack(iPlaybackID);
+            return -4;
+        }
+        return iPlaybackID;
     }
 
     public static int OnRealPlaySurfaceChanged(int previewHandle, int nRegionNum, SurfaceView surfaceView) {
