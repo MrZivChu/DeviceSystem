@@ -34,7 +34,16 @@ public class CameraHelper {
         playInfo.dwStreamType = 0;
         playInfo.bBlocked = 1;
         playInfo.hHwnd = surfaceView.getHolder();
-        return RealPlay_V40_jni(0, playInfo, null);
+        int iRet = HCNetSDK.getInstance().NET_DVR_RealPlay_V40(0, playInfo, null);
+        if (iRet < 0) {
+            Log.e("DeviceSystem", "NET_DVR_RealPlay_V40 error!");
+            return -1;
+        }
+        boolean bRet = HCNetSDKJNAInstance.getInstance().NET_DVR_OpenSound((short) iRet);
+        if (bRet) {
+            Log.e("DeviceSystem", "NET_DVR_OpenSound Succ!");
+        }
+        return iRet;
     }
 
     public static boolean OnStopRealPlay(int previewHandle) {
@@ -49,7 +58,7 @@ public class CameraHelper {
         return true;
     }
 
-    public static int OnPlayBackByTime_v40(int iLogID, NET_DVR_VOD_PARA vodParma) {
+    public static int OnPlayBackByTime(int iLogID, NET_DVR_VOD_PARA vodParma) {
         if (iLogID < 0 || vodParma == null) {
             Log.e("SimpleDemo", "PlayBackByTime_v40_jni failed with error param");
             return -1;
@@ -73,6 +82,18 @@ public class CameraHelper {
         return iPlaybackID;
     }
 
+    public static boolean OnStopPlayBack(int playbackID) {
+        if (playbackID < 0) {
+            Log.e("SimpleDemo", "StopPlayBack_jni failed with error param");
+            return false;
+        }
+        return HCNetSDK.getInstance().NET_DVR_StopPlayBack(playbackID);
+    }
+
+    public static int OnGetPlayBackPos(int playbackID) {
+        return HCNetSDK.getInstance().NET_DVR_GetPlayBackPos(playbackID);
+    }
+
     public static int OnRealPlaySurfaceChanged(int previewHandle, int nRegionNum, SurfaceView surfaceView) {
         if (previewHandle < 0 || nRegionNum < 0) {
             Log.e("SimpleDemo", "RealPlaySurfaceChanged_jni failed with error param");
@@ -83,23 +104,6 @@ public class CameraHelper {
 
     public static int GetLastError() {
         return HCNetSDK.getInstance().NET_DVR_GetLastError();
-    }
-
-    private static int RealPlay_V40_jni(int iUserID, NET_DVR_PREVIEWINFO playInfo, Pointer pUser) {
-        if (iUserID < 0) {
-            Log.e("DeviceSystem", "RealPlay_V40_jni failed with error param");
-            return -1;
-        }
-        int iRet = HCNetSDK.getInstance().NET_DVR_RealPlay_V40(iUserID, playInfo, null);
-        if (iRet < 0) {
-            Log.e("DeviceSystem", "NET_DVR_RealPlay_V40 error!");
-            return -1;
-        }
-        boolean bRet = HCNetSDKJNAInstance.getInstance().NET_DVR_OpenSound((short) iRet);
-        if (bRet) {
-            Log.e("DeviceSystem", "NET_DVR_OpenSound Succ!");
-        }
-        return iRet;
     }
 
 }
