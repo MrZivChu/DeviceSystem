@@ -6,4 +6,8 @@
     <string name="pwd">HikCDJDNF</string>
     <string name="stop">停止</string>
     <string name="ok">确定</string>
+    <string name="leftMove">左旋转</string>
+    <string name="rightMove">右旋转</string>
+    <string name="upMove">上旋转</string>
+    <string name="downMove">下旋转</string>
 </resources>

@@ -8,6 +8,7 @@ import android.widget.Toast;
 import com.hikvision.netsdk.HCNetSDK;
 import com.hikvision.netsdk.NET_DVR_PREVIEWINFO;
 import com.hikvision.netsdk.NET_DVR_VOD_PARA;
+import com.hikvision.netsdk.PTZCommand;
 import com.hikvision.netsdk.PlaybackControlCommand;
 import com.sun.jna.Pointer;
 
@@ -58,6 +59,24 @@ public class CameraHelper {
         return true;
     }
 
+    public static void OnPTZControl(int previewHandle, int cmd) {
+        if (!HCNetSDK.getInstance().NET_DVR_PTZControl(previewHandle, cmd, 0)) {
+            System.out.println("PTZControlWithSpeed  PAN_RIGHT 0 faild!" + " err: " + HCNetSDK.getInstance().NET_DVR_GetLastError());
+        } else {
+            System.out.println("PTZControlWithSpeed  PAN_RIGHT 0 succ");
+        }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (!HCNetSDK.getInstance().NET_DVR_PTZControl(previewHandle, cmd, 1)) {
+            System.out.println("PTZControlWithSpeed  PAN_RIGHT 1 faild!" + " err: " + HCNetSDK.getInstance().NET_DVR_GetLastError());
+        } else {
+            System.out.println("PTZControlWithSpeed  PAN_RIGHT 1 succ");
+        }
+    }
+
     public static int OnPlayBackByTime(int iLogID, NET_DVR_VOD_PARA vodParma) {
         if (iLogID < 0 || vodParma == null) {
             Log.e("SimpleDemo", "PlayBackByTime_v40_jni failed with error param");
@@ -94,7 +113,8 @@ public class CameraHelper {
         return HCNetSDK.getInstance().NET_DVR_GetPlayBackPos(playbackID);
     }
 
-    public static int OnRealPlaySurfaceChanged(int previewHandle, int nRegionNum, SurfaceView surfaceView) {
+    public static int OnRealPlaySurfaceChanged(int previewHandle, int nRegionNum, SurfaceView
+            surfaceView) {
         if (previewHandle < 0 || nRegionNum < 0) {
             Log.e("SimpleDemo", "RealPlaySurfaceChanged_jni failed with error param");
             return -1;

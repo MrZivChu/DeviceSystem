@@ -18,6 +18,7 @@ import com.hcnetsdk.jna.CameraHelper;
 import com.hcnetsdk.jna.HCNetSDKJNAInstance;
 import com.hikvision.netsdk.HCNetSDK;
 import com.hikvision.netsdk.NET_DVR_PREVIEWINFO;
+import com.hikvision.netsdk.PTZCommand;
 import com.sun.jna.Pointer;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
@@ -32,6 +33,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         Button loginBtn = findViewById(R.id.loginBtn);
         Button previewBtn = findViewById(R.id.previewBtn);
+        Button leftBtn = findViewById(R.id.leftBtn);
+        Button rightBtn = findViewById(R.id.rightBtn);
+        Button upBtn = findViewById(R.id.upBtn);
+        Button downBtn = findViewById(R.id.downBtn);
         surfaceView_ = findViewById(R.id.surfaceView);
 
         if (!CameraHelper.OnInit()) {
@@ -47,6 +52,30 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onClick(View view) {
                 OnPreview();
+            }
+        });
+        leftBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CameraHelper.OnPTZControl(previewHandle_, PTZCommand.PAN_LEFT);
+            }
+        });
+        rightBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CameraHelper.OnPTZControl(previewHandle_, PTZCommand.PAN_RIGHT);
+            }
+        });
+        upBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CameraHelper.OnPTZControl(previewHandle_, PTZCommand.TILT_UP);
+            }
+        });
+        downBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CameraHelper.OnPTZControl(previewHandle_, PTZCommand.TILT_DOWN);
             }
         });
     }
