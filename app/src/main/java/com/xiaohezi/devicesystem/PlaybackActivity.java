@@ -1,8 +1,10 @@
 package com.xiaohezi.devicesystem;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
 
 import android.app.DatePickerDialog;
 import android.graphics.PixelFormat;
@@ -10,10 +12,12 @@ import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -31,7 +35,7 @@ import java.util.Date;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+public class PlaybackActivity extends Fragment implements SurfaceHolder.Callback {
     public static final int PLATBACK_EXCEPTION = 1;
     public static final int PLATBACK_FINISH = 2;
     public static final int PLATBACK_PROCESS = 3;
@@ -47,18 +51,23 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
     NET_DVR_TIME timeStart = new NET_DVR_TIME();
     NET_DVR_TIME timeStop = new NET_DVR_TIME();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_playback);
+    EditText ipEditText;
+    EditText pwdEditText;
 
-        Button loginBtn = findViewById(R.id.loginBtn2);
-        Button previewBtn = findViewById(R.id.previewBtn2);
-        Button stopBtn = findViewById(R.id.stopBtn2);
-        TextView startTimeTextView = findViewById(R.id.startTimeTextView);
-        TextView endTimeTextView = findViewById(R.id.endTimeTextView);
-        seekBar_ = findViewById(R.id.seekBar);
-        surfaceView_ = findViewById(R.id.surfaceView2);
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_playback, container, false);
+
+        ipEditText = view.findViewById(R.id.editIP2);
+        pwdEditText = view.findViewById(R.id.editPwd2);
+        Button loginBtn =view.findViewById(R.id.loginBtn2);
+        Button previewBtn = view.findViewById(R.id.previewBtn2);
+        Button stopBtn = view.findViewById(R.id.stopBtn2);
+        TextView startTimeTextView = view.findViewById(R.id.startTimeTextView);
+        TextView endTimeTextView = view.findViewById(R.id.endTimeTextView);
+        seekBar_ = view.findViewById(R.id.seekBar);
+        surfaceView_ = view.findViewById(R.id.surfaceView2);
 
         timeStart.dwYear = 2023;
         timeStart.dwMonth = 03;
@@ -70,15 +79,17 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         timeStop.dwDay = 04;
         timeStop.dwHour = 20;
         timeStop.dwMinute = 02;
+        startTimeTextView.setText(timeStart.dwYear + "-" + timeStart.dwMonth + "-" + timeStart.dwDay + " " + timeStart.dwHour + ":" + timeStart.dwMinute);
+        endTimeTextView.setText(timeStop.dwYear + "-" + timeStop.dwMonth + "-" + timeStop.dwDay + " " + timeStop.dwHour + ":" + timeStop.dwMinute);
 
         if (!CameraHelper.OnInit()) {
-            Toast.makeText(this, "摄像机SDK初始化失败", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "摄像机SDK初始化失败", Toast.LENGTH_SHORT).show();
         }
 
         startTimeTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                TimeSelectDialog dialog = new TimeSelectDialog(PlaybackActivity.this);
+                TimeSelectDialog dialog = new TimeSelectDialog(getContext());
                 dialog.SetCallBack(new TimeSelectDialog.ClickCallback() {
                     @Override
                     public void onClick(int year, int month, int day, int hour, int minute) {
@@ -109,7 +120,7 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
 //                datePicker.setMaxDate(new Date().getTime()); // 设置日期的上限日期
 //                datePickerDialog.show();
 
-                TimeSelectDialog dialog = new TimeSelectDialog(PlaybackActivity.this);
+                TimeSelectDialog dialog = new TimeSelectDialog(getContext());
                 dialog.SetCallBack(new TimeSelectDialog.ClickCallback() {
                     @Override
                     public void onClick(int year, int month, int day, int hour, int minute) {
@@ -145,24 +156,23 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
                 OnStop();
             }
         });
+        return  view;
     }
 
     void OnLogin() {
-        EditText ipEditText = findViewById(R.id.editIP2);
         String ip = ipEditText.getText().toString();
-        EditText pwdEditText = findViewById(R.id.editPwd2);
         String pwd = pwdEditText.getText().toString();
         userID_ = CameraHelper.OnLogin(ip, "admin", pwd, 8000);
         if (userID_ == -1) {
-            Toast.makeText(this, "无法连接到摄像头", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "无法连接到摄像头", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "摄像机初始化成功", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "摄像机初始化成功", Toast.LENGTH_SHORT).show();
         }
     }
 
     void OnStop() {
         if (playBackID_ == -1) {
-            Toast.makeText(this, "plack back first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "plack back first", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
@@ -181,11 +191,11 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case PLATBACK_EXCEPTION:
-                    Toast.makeText(PlaybackActivity.this, "playback abnormal termination,error=" + msg.arg1, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "playback abnormal termination,error=" + msg.arg1, Toast.LENGTH_SHORT).show();
                     break;
                 case PLATBACK_FINISH:
                     seekBar_.setProgress(msg.arg1);
-                    Toast.makeText(PlaybackActivity.this, "playback by time over", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "playback by time over", Toast.LENGTH_SHORT).show();
                     break;
                 case PLATBACK_PROCESS:
                     seekBar_.setProgress(msg.arg1);
@@ -205,12 +215,12 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         vodParma.hWnd = surfaceView_.getHolder().getSurface();
 
         if (playBackID_ != -1) {
-            Toast.makeText(this, "maybe plack back already,click stop button first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "maybe plack back already,click stop button first", Toast.LENGTH_SHORT).show();
             return;
         }
         playBackID_ = CameraHelper.OnPlayBackByTime(userID_, vodParma);
         if (playBackID_ < 0) {
-            Toast.makeText(this, "play back failed,error=" + CameraHelper.GetLastError() + ",errorID=" + playBackID_, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "play back failed,error=" + CameraHelper.GetLastError() + ",errorID=" + playBackID_, Toast.LENGTH_SHORT).show();
             return;
         }
         Thread threadProcess = new Thread() {
@@ -270,7 +280,7 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         Surface surface = surfaceView_.getHolder().getSurface();
         if (surface.isValid()) {
             if (-1 == CameraHelper.OnRealPlaySurfaceChanged(previewHandle_, 0, surfaceView_))
-                Toast.makeText(this, "NET_DVR_PlayBackSurfaceChanged" + CameraHelper.GetLastError(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "NET_DVR_PlayBackSurfaceChanged" + CameraHelper.GetLastError(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -286,7 +296,7 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         }
         if (surfaceView_.getHolder().getSurface().isValid()) {
             if (-1 == CameraHelper.OnRealPlaySurfaceChanged(previewHandle_, 0, null)) {
-                Toast.makeText(this, "NET_DVR_RealPlaySurfaceChanged" + CameraHelper.GetLastError(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "NET_DVR_RealPlaySurfaceChanged" + CameraHelper.GetLastError(), Toast.LENGTH_SHORT).show();
             }
         }
     }
