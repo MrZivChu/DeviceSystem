@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.app.DatePickerDialog;
 import android.graphics.PixelFormat;
 import android.opengl.Visibility;
 import android.os.Bundle;
@@ -25,6 +26,8 @@ import com.hcnetsdk.jna.CameraHelper;
 import com.hikvision.netsdk.NET_DVR_TIME;
 import com.hikvision.netsdk.NET_DVR_VOD_PARA;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -41,8 +44,6 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
     private int process_ = 0;
     private Lock lockPlayBack_ = new ReentrantLock(true);
 
-    private int clickWhichBtn = -1;
-
     NET_DVR_TIME timeStart = new NET_DVR_TIME();
     NET_DVR_TIME timeStop = new NET_DVR_TIME();
 
@@ -54,25 +55,21 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         Button loginBtn = findViewById(R.id.loginBtn2);
         Button previewBtn = findViewById(R.id.previewBtn2);
         Button stopBtn = findViewById(R.id.stopBtn2);
-        Button selectTimeBtn = findViewById(R.id.selectTimeBtn);
         TextView startTimeTextView = findViewById(R.id.startTimeTextView);
         TextView endTimeTextView = findViewById(R.id.endTimeTextView);
-        ConstraintLayout timeLayout = findViewById(R.id.timeLayout);
         seekBar_ = findViewById(R.id.seekBar);
         surfaceView_ = findViewById(R.id.surfaceView2);
 
         timeStart.dwYear = 2023;
-        timeStart.dwMonth = 02;
-        timeStart.dwDay = 25;
-        timeStart.dwHour = 14;
-        timeStart.dwMinute = 10;
-        timeStart.dwSecond = 00;
+        timeStart.dwMonth = 03;
+        timeStart.dwDay = 04;
+        timeStart.dwHour = 20;
+        timeStart.dwMinute = 00;
         timeStop.dwYear = 2023;
-        timeStop.dwMonth = 02;
-        timeStop.dwDay = 25;
-        timeStop.dwHour = 14;
-        timeStop.dwMinute = 20;
-        timeStop.dwSecond = 00;
+        timeStop.dwMonth = 03;
+        timeStop.dwDay = 04;
+        timeStop.dwHour = 20;
+        timeStop.dwMinute = 02;
 
         if (!CameraHelper.OnInit()) {
             Toast.makeText(this, "摄像机SDK初始化失败", Toast.LENGTH_SHORT).show();
@@ -81,40 +78,52 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         startTimeTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                clickWhichBtn = 0;
-                timeLayout.setVisibility(View.VISIBLE);
+                TimeSelectDialog dialog = new TimeSelectDialog(PlaybackActivity.this);
+                dialog.SetCallBack(new TimeSelectDialog.ClickCallback() {
+                    @Override
+                    public void onClick(int year, int month, int day, int hour, int minute) {
+                        timeStart.dwYear = year;
+                        timeStart.dwMonth = month;
+                        timeStart.dwDay = day;
+                        timeStart.dwHour = hour;
+                        timeStart.dwMinute = minute;
+                        startTimeTextView.setText(timeStart.dwYear + "-" + timeStart.dwMonth + "-" + timeStart.dwDay + " " + timeStart.dwHour + ":" + timeStart.dwMinute);
+                        dialog.hide();
+                    }
+                });
+                dialog.show();
+                dialog.UpdateTimer(timeStart.dwYear, timeStart.dwMonth, timeStart.dwDay, timeStart.dwHour, timeStart.dwMinute);
             }
         });
 
         endTimeTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                clickWhichBtn = 1;
-                timeLayout.setVisibility(View.VISIBLE);
-            }
-        });
+//                Calendar cal = Calendar.getInstance();
+//                DatePickerDialog datePickerDialog = new DatePickerDialog(PlaybackActivity.this, new DatePickerDialog.OnDateSetListener() {
+//                    @Override
+//                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+//                    }
+//                },cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DAY_OF_MONTH));
+//                DatePicker datePicker = datePickerDialog.getDatePicker();
+//                datePicker.setMaxDate(new Date().getTime()); // 设置日期的上限日期
+//                datePickerDialog.show();
 
-        selectTimeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DatePicker dp = findViewById(R.id.date_picker);
-                TimePicker tp = findViewById(R.id.time_picker);
-                if (clickWhichBtn == 0) {
-                    timeStart.dwYear = dp.getYear();
-                    timeStart.dwMonth = dp.getMonth();
-                    timeStart.dwDay = dp.getDayOfMonth();
-                    timeStart.dwHour = tp.getHour();
-                    timeStart.dwMinute = tp.getMinute();
-                    startTimeTextView.setText(timeStart.dwYear + "-" + timeStart.dwMonth + "-" + timeStart.dwDay + " " + timeStart.dwHour + ":" + timeStart.dwMinute);
-                } else {
-                    timeStop.dwYear = dp.getYear();
-                    timeStop.dwMonth = dp.getMonth();
-                    timeStop.dwDay = dp.getDayOfMonth();
-                    timeStop.dwHour = tp.getHour();
-                    timeStop.dwMinute = tp.getMinute();
-                    endTimeTextView.setText(timeStop.dwYear + "-" + timeStop.dwMonth + "-" + timeStop.dwDay + " " + timeStop.dwHour + ":" + timeStop.dwMinute);
-                }
-                timeLayout.setVisibility(View.GONE);
+                TimeSelectDialog dialog = new TimeSelectDialog(PlaybackActivity.this);
+                dialog.SetCallBack(new TimeSelectDialog.ClickCallback() {
+                    @Override
+                    public void onClick(int year, int month, int day, int hour, int minute) {
+                        timeStop.dwYear = year;
+                        timeStop.dwMonth = month;
+                        timeStop.dwDay = day;
+                        timeStop.dwHour = hour;
+                        timeStop.dwMinute = minute;
+                        endTimeTextView.setText(timeStop.dwYear + "-" + timeStop.dwMonth + "-" + timeStop.dwDay + " " + timeStop.dwHour + ":" + timeStop.dwMinute);
+                        dialog.hide();
+                    }
+                });
+                dialog.show();
+                dialog.UpdateTimer(timeStop.dwYear, timeStop.dwMonth, timeStop.dwDay, timeStop.dwHour, timeStop.dwMinute);
             }
         });
 
@@ -167,7 +176,7 @@ public class PlaybackActivity extends AppCompatActivity implements SurfaceHolder
         }
     }
 
-    private Handler hander = new Handler() {
+    private final Handler hander = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
